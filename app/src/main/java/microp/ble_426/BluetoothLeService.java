@@ -45,6 +45,7 @@ public class BluetoothLeService extends Service {
             "microp.ble-426.EXTRA_DATA";
 
     public final static UUID service_uuid = UUID.fromString(GattAttributes.SERVICE_UUID);
+    public final static UUID char_uuid =  UUID.fromString(GattAttributes.CHARACTERISTIC_UUID);
 
     // Implements callback methods for GATT events
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -98,7 +99,7 @@ public class BluetoothLeService extends Service {
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
         // for temperature
-        if (service_uuid.equals(characteristic.getUuid())) {
+        if (char_uuid.equals(characteristic.getUuid())) {
             //Todo
             byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -261,9 +262,9 @@ public class BluetoothLeService extends Service {
 
         //Todo
         // This is specific to Heart Rate Measurement.
-        if (service_uuid.equals(characteristic.getUuid())) {
+        if (char_uuid.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    UUID.fromString(GattAttributes.CHARACTERISTIC_UUID));
+                    UUID.fromString(GattAttributes.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR_UUID));
             descriptor.setValue(enabled ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
                     new byte[] {0x00, 0x00});
             mBluetoothGatt.writeDescriptor(descriptor);
