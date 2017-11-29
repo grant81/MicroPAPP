@@ -98,25 +98,16 @@ public class BluetoothLeService extends Service {
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
         // for temperature
-//        if (service_uuid.equals(characteristic.getUuid())) {
-//            //Todo
-//            float temperature =(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16,0)).floatValue();
-//            temperature /= 10.0f;
-//            Log.d(TAG, String.format("__Temperature: %,2.1f", temperature));
-//            intent.putExtra(EXTRA_DATA, String.valueOf(temperature));
-////            int flag = characteristic.getProperties();
-////            int format = -1;
-////            if ((flag & 0x01) != 0) {
-////                format = BluetoothGattCharacteristic.FORMAT_UINT16;
-////                Log.d(TAG, "Heart rate format UINT16.");
-////            } else {
-////                format = BluetoothGattCharacteristic.FORMAT_UINT8;
-////                Log.d(TAG, "Heart rate format UINT8.");
-////            }
-////            final int heartRate = characteristic.getIntValue(format, 1);
-////            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-////            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
-//        } else {
+        if (service_uuid.equals(characteristic.getUuid())) {
+            //Todo
+            byte[] data = characteristic.getValue();
+            if (data != null && data.length > 0) {
+                StringBuilder stringBuilder = new StringBuilder(data.length);
+                for(byte byteChar : data)
+                    stringBuilder.append(byteChar);
+                intent.putExtra(EXTRA_DATA, "New Data" + "\n" + stringBuilder.toString());
+            }
+        } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -124,7 +115,7 @@ public class BluetoothLeService extends Service {
                 for(byte byteChar : data)
                     stringBuilder.append(String.format("%02X ", byteChar));
                 intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
-//            }
+            }
         }
         sendBroadcast(intent);
     }
@@ -273,7 +264,8 @@ public class BluetoothLeService extends Service {
         if (service_uuid.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(GattAttributes.CHARACTERISTIC_UUID));
-            descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+            descriptor.setValue(enabled ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
+                    new byte[] {0x00, 0x00});
             mBluetoothGatt.writeDescriptor(descriptor);
         }
     }
