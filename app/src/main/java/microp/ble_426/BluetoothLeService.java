@@ -17,6 +17,7 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.UUID;
 
@@ -46,6 +47,7 @@ public class BluetoothLeService extends Service {
 
     public final static UUID service_uuid = UUID.fromString(GattAttributes.SERVICE_UUID);
     public final static UUID char_uuid =  UUID.fromString(GattAttributes.CHARACTERISTIC_UUID);
+    public final static UUID acc_char_uuid =  UUID.fromString(GattAttributes.ACC_CHAR_UUID);
 
     // Implements callback methods for GATT events
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -98,17 +100,25 @@ public class BluetoothLeService extends Service {
 
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
-        // for temperature
+
         if (char_uuid.equals(characteristic.getUuid())) {
             //Todo
-            byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
-                    stringBuilder.append(byteChar);
-                intent.putExtra(EXTRA_DATA, "New Data" + "\n" + stringBuilder.toString());
+            short d1, d2;
+            final byte[] data = characteristic.getValue();
+            d1 = ByteBuffer.wrap(data, 0, 2).getShort();
+            d2 = ByteBuffer.wrap(data, 2, 2).getShort();
+            intent.putExtra(EXTRA_DATA, "New Data"+"\n"+d1+"-"+d2);
+        }
+        else if (acc_char_uuid.equals(characteristic.getUuid())) {
+            short x,y,z;
+            final byte[] data = characteristic.getValue();
+            if (data.length == 6){
+                x = ByteBuffer.wrap(data, 0, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
+                y = ByteBuffer.wrap(data, 2, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
+                z = ByteBuffer.wrap(data, 4, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
+                intent.putExtra(EXTRA_DATA, "ACC"+"\n"+x+"--"+y+"--"+z);
             }
-        } else {
+        }else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -261,10 +271,9 @@ public class BluetoothLeService extends Service {
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
         //Todo
-        // This is specific to Heart Rate Measurement.
-        if (char_uuid.equals(characteristic.getUuid())) {
+        if (acc_char_uuid.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    UUID.fromString(GattAttributes.CHARACTERISTIC_UPDATE_NOTIFICATION_DESCRIPTOR_UUID));
+                    UUID.fromString(GattAttributes.NOTIFICATION_DESCRIPTOR_UUID));
             descriptor.setValue(enabled ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
                     new byte[] {0x00, 0x00});
             mBluetoothGatt.writeDescriptor(descriptor);
