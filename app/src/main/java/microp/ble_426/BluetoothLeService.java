@@ -103,11 +103,17 @@ public class BluetoothLeService extends Service {
 
         if (char_uuid.equals(characteristic.getUuid())) {
             //Todo
-            short d1, d2;
             final byte[] data = characteristic.getValue();
-            d1 = ByteBuffer.wrap(data, 0, 2).getShort();
-            d2 = ByteBuffer.wrap(data, 2, 2).getShort();
-            intent.putExtra(EXTRA_DATA, "New Data"+"\n"+d1+"-"+d2);
+            if (data != null && data.length > 0) {
+                final StringBuilder stringBuilder = new StringBuilder(data.length);
+                for(byte byteChar : data)
+                    stringBuilder.append(String.format("%02X ", byteChar));
+                intent.putExtra(EXTRA_DATA, stringBuilder.toString());
+            }
+//            short d1, d2;
+//            d1 = ByteBuffer.wrap(data, 0, 2).getShort();
+//            d2 = ByteBuffer.wrap(data, 2, 2).getShort();
+//            intent.putExtra(EXTRA_DATA, "New Data"+"\n"+d1+"-"+d2);
         }
         else if (acc_char_uuid.equals(characteristic.getUuid())) {
             short x,y,z;
