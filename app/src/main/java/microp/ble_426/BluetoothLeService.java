@@ -48,6 +48,7 @@ public class BluetoothLeService extends Service {
     public final static UUID service_uuid = UUID.fromString(GattAttributes.SERVICE_UUID);
     public final static UUID char_uuid =  UUID.fromString(GattAttributes.CHARACTERISTIC_UUID);
     public final static UUID acc_char_uuid =  UUID.fromString(GattAttributes.ACC_CHAR_UUID);
+    public final static UUID temp_char_uuid =  UUID.fromString(GattAttributes.TEMP_CHAR_UUID);
 
     // Implements callback methods for GATT events
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -103,26 +104,25 @@ public class BluetoothLeService extends Service {
 
         if (char_uuid.equals(characteristic.getUuid())) {
             //Todo
-            final byte[] data = characteristic.getValue();
-            if (data != null && data.length > 0) {
-                final StringBuilder stringBuilder = new StringBuilder(data.length);
-                for(byte byteChar : data)
-                    stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, stringBuilder.toString());
-            }
+            byte data = (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0)).byteValue();
+            intent.putExtra(EXTRA_DATA, String.valueOf("0;"+data));
 //            short d1, d2;
+//            final byte[] data = characteristic.getValue();
 //            d1 = ByteBuffer.wrap(data, 0, 2).getShort();
 //            d2 = ByteBuffer.wrap(data, 2, 2).getShort();
 //            intent.putExtra(EXTRA_DATA, "New Data"+"\n"+d1+"-"+d2);
-        }
-        else if (acc_char_uuid.equals(characteristic.getUuid())) {
+        } else if(temp_char_uuid.equals(characteristic.getUuid())) {
+            float temperatura =(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16,0)).floatValue();
+            temperatura /= 10.0f;
+            intent.putExtra(EXTRA_DATA, String.valueOf("1;"+temperatura));
+        } else if (acc_char_uuid.equals(characteristic.getUuid())) {
             short x,y,z;
             final byte[] data = characteristic.getValue();
             if (data.length == 6){
                 x = ByteBuffer.wrap(data, 0, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
                 y = ByteBuffer.wrap(data, 2, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
                 z = ByteBuffer.wrap(data, 4, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
-                intent.putExtra(EXTRA_DATA, "ACC"+"\n"+x+"--"+y+"--"+z);
+                intent.putExtra(EXTRA_DATA, "2;"+x+"--"+y+"--"+z);
             }
         }else {
             // For all other profiles, writes the data formatted in HEX.
