@@ -46,7 +46,7 @@ public class BluetoothLeService extends Service {
             "microp.ble-426.EXTRA_DATA";
 
     public final static UUID service_uuid = UUID.fromString(GattAttributes.SERVICE_UUID);
-    public final static UUID char_uuid =  UUID.fromString(GattAttributes.CHARACTERISTIC_UUID);
+    public final static UUID sound_char_uuid =  UUID.fromString(GattAttributes.CHARACTERISTIC_UUID);
     public final static UUID acc_char_uuid =  UUID.fromString(GattAttributes.ACC_CHAR_UUID);
     public final static UUID temp_char_uuid =  UUID.fromString(GattAttributes.TEMP_CHAR_UUID);
 
@@ -102,15 +102,9 @@ public class BluetoothLeService extends Service {
     private void broadcastUpdate(final String action, final BluetoothGattCharacteristic characteristic) {
         final Intent intent = new Intent(action);
 
-        if (char_uuid.equals(characteristic.getUuid())) {
-            //Todo
+        if (sound_char_uuid.equals(characteristic.getUuid())) {
             byte data = (characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0)).byteValue();
             intent.putExtra(EXTRA_DATA, String.valueOf("0;"+data));
-//            short d1, d2;
-//            final byte[] data = characteristic.getValue();
-//            d1 = ByteBuffer.wrap(data, 0, 2).getShort();
-//            d2 = ByteBuffer.wrap(data, 2, 2).getShort();
-//            intent.putExtra(EXTRA_DATA, "New Data"+"\n"+d1+"-"+d2);
         } else if(temp_char_uuid.equals(characteristic.getUuid())) {
             float temperatura =(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16,0)).floatValue();
             temperatura /= 10.0f;
@@ -131,7 +125,7 @@ public class BluetoothLeService extends Service {
                 final StringBuilder stringBuilder = new StringBuilder(data.length);
                 for(byte byteChar : data)
                     stringBuilder.append(String.format("%02X ", byteChar));
-                intent.putExtra(EXTRA_DATA, new String(data) + "\n" + stringBuilder.toString());
+                intent.putExtra(EXTRA_DATA, "-1;"+stringBuilder.toString());
             }
         }
         sendBroadcast(intent);
@@ -276,8 +270,7 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
-        //Todo
-        if (acc_char_uuid.equals(characteristic.getUuid())) {
+        if (sound_char_uuid.equals(characteristic.getUuid()) || acc_char_uuid.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(GattAttributes.NOTIFICATION_DESCRIPTOR_UUID));
             descriptor.setValue(enabled ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
