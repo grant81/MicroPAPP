@@ -104,7 +104,8 @@ public class BluetoothLeService extends Service {
 
         if (sound_char_uuid.equals(characteristic.getUuid())) {
             int data = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0);
-            intent.putExtra(EXTRA_DATA, String.valueOf("0;"+data));
+            String hex = Integer.toHexString(data);
+            intent.putExtra(EXTRA_DATA, String.valueOf("0;"+hex));
         } else if(temp_char_uuid.equals(characteristic.getUuid())) {
             float temperatura =(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16,0)).floatValue();
             temperatura /= 10.0f;
