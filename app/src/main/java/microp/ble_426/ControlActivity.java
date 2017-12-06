@@ -9,8 +9,10 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -18,8 +20,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -111,9 +116,24 @@ public class ControlActivity extends Activity{
         new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Todo
-                String data = getIntent().getStringExtra(BluetoothLeService.EXTRA_DATA);
-                Log.e(TAG, "Button Click");
+                StorageReference riversRef = mStorageRef.child("Sound/track.txt");
+                if(soundBuffer != null) {
+                    byte[] file = soundBuffer.getBytes();
+                    riversRef.putBytes(file)
+                        .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                Log.e(TAG, "Url: " + downloadUrl);
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Log.e(TAG, "Failed to upload");
+                            }
+                        });
+                }
             }
     };
 
@@ -158,14 +178,13 @@ public class ControlActivity extends Activity{
             final boolean result = mBluetoothLeService.connect(mDeviceAddress);
             Log.d(TAG, "Connect request result=" + result);
         }
-
         if (dataThread==null) {
             dataThread = new Thread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         while (mGattCharacteristics == null || mGattCharacteristics.size()==0){
-                            Thread.sleep(500);
+                            Thread.sleep(200);
                         }
                         BluetoothGattCharacteristic characteristic0 = mGattCharacteristics.get(char_cache[0][0]).get(char_cache[0][1]);
                         mBluetoothLeService.setCharacteristicNotification(characteristic0, true);
@@ -175,7 +194,7 @@ public class ControlActivity extends Activity{
                         Thread.sleep(100);
                         BluetoothGattCharacteristic characteristic2 = mGattCharacteristics.get(char_cache[2][0]).get(char_cache[2][1]);
                         mBluetoothLeService.setCharacteristicNotification(characteristic2, true);
-                        Thread.sleep(500);
+                        Thread.sleep(200);
                     } catch (Exception e) {
                         e.getLocalizedMessage();
                     }
@@ -237,11 +256,9 @@ public class ControlActivity extends Activity{
     }
 
     private void displaySoundData(String data) {
-        //Todo
         if (data != null) {
-//            soundBuffer += String.format("%02X ", data);
-            soundBuffer += data;
-            Log.e(TAG, "Sound data: " + soundBuffer);
+            soundBuffer += data + " ";
+//            Log.e(TAG, "Sound data: " + soundBuffer);
             mDataFieldSound.setText(String.valueOf("Sound Data\n"+soundBuffer));
         }
     }
