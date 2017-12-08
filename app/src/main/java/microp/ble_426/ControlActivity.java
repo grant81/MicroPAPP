@@ -11,21 +11,34 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,8 +50,6 @@ public class ControlActivity extends Activity{
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
     private TextView mConnectionState;
-    private TextView mDataFieldAcc;
-    private TextView mDataFieldTemp;
     private TextView mDataFieldSound;
     private Button mButton;
     private String mDeviceName;
@@ -50,10 +61,11 @@ public class ControlActivity extends Activity{
     private BluetoothGattCharacteristic mNotifyCharacteristic;
 
     private Thread dataThread;
-    private int[][] char_cache = new int[3][2];
+    private int[][] char_cache = new int[1][2];
     private String soundBuffer;
 
     private StorageReference mStorageRef;
+    private FirebaseAuth mAuth;
 
     // Service lifecycle.
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -98,12 +110,6 @@ public class ControlActivity extends Activity{
                     case 0:
                         displaySoundData(temp[1]);
                         break;
-                    case 1:
-                        mDataFieldTemp.setText(String.valueOf("Temp: "+temp[1]));
-                        break;
-                    case 2:
-                        mDataFieldAcc.setText(String.valueOf("Acc: "+temp[1]));
-                        break;
                     case -1:
                         break;
                 }
@@ -116,10 +122,25 @@ public class ControlActivity extends Activity{
         new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                StorageReference riversRef = mStorageRef.child("Sound/track.txt");
                 if(soundBuffer != null) {
+//                    String filepath = Environment.getExternalStorageDirectory()+"/";
+//                    File file = new File(filepath, "track.wav");
+//                    try {
+//                        file.createNewFile();
+//                        FileOutputStream fout = new FileOutputStream(file);
+//                        OutputStreamWriter fwriter = new OutputStreamWriter(fout);
+//                        fwriter.append(soundBuffer);
+//                        fwriter.close();
+//                        fout.flush();
+//                        fout.close();
+//                    } catch (IOException e) {
+//                        Log.e(TAG, "Failed to write file");
+//                    }
+//                    Uri soundFile = Uri.fromFile(file);
+                    StorageReference riversRef = mStorageRef.child("Sound/track.txt");
                     byte[] file = soundBuffer.getBytes();
                     riversRef.putBytes(file)
+//                    riversRef.putFile(soundFile)
                         .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -138,8 +159,6 @@ public class ControlActivity extends Activity{
     };
 
     private void clearUI() {
-        mDataFieldAcc.setText(R.string.no_data);
-        mDataFieldTemp.setText(R.string.no_data);
         mDataFieldSound.setText(R.string.no_data);
         mBluetoothLeService.close();
     }
@@ -150,6 +169,7 @@ public class ControlActivity extends Activity{
         setContentView(R.layout.service);
         // initial firebase storage
         mStorageRef = FirebaseStorage.getInstance().getReference();
+        mAuth = FirebaseAuth.getInstance();
 
         final Intent intent = getIntent();
         mDeviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
@@ -157,9 +177,8 @@ public class ControlActivity extends Activity{
         // Sets up UI references.
         ((TextView) findViewById(R.id.device_address)).setText(mDeviceAddress);
         mConnectionState = (TextView) findViewById(R.id.connection_state);
-        mDataFieldAcc = (TextView) findViewById(R.id.data_value_acc);
-        mDataFieldTemp = (TextView) findViewById(R.id.data_value_temp);
         mDataFieldSound = (TextView) findViewById(R.id.data_value_sound);
+        mDataFieldSound.setMovementMethod(new ScrollingMovementMethod());
         soundBuffer = "";
         mButton = (Button) findViewById(R.id.send_button);
         mButton.setOnClickListener(buttonClickListener);
@@ -184,17 +203,11 @@ public class ControlActivity extends Activity{
                 public void run() {
                     try {
                         while (mGattCharacteristics == null || mGattCharacteristics.size()==0){
-                            Thread.sleep(200);
+                            Thread.sleep(100);
                         }
                         BluetoothGattCharacteristic characteristic0 = mGattCharacteristics.get(char_cache[0][0]).get(char_cache[0][1]);
                         mBluetoothLeService.setCharacteristicNotification(characteristic0, true);
-                        Thread.sleep(100);
-                        BluetoothGattCharacteristic characteristic1 = mGattCharacteristics.get(char_cache[1][0]).get(char_cache[1][1]);
-                        mBluetoothLeService.readCharacteristic(characteristic1);
-                        Thread.sleep(100);
-                        BluetoothGattCharacteristic characteristic2 = mGattCharacteristics.get(char_cache[2][0]).get(char_cache[2][1]);
-                        mBluetoothLeService.setCharacteristicNotification(characteristic2, true);
-                        Thread.sleep(200);
+                        Thread.sleep(8);
                     } catch (Exception e) {
                         e.getLocalizedMessage();
                     }
@@ -258,7 +271,7 @@ public class ControlActivity extends Activity{
     private void displaySoundData(String data) {
         if (data != null) {
             soundBuffer += data + " ";
-//            Log.e(TAG, "Sound data: " + soundBuffer);
+            Log.e(TAG, "Sound data: " + data);
             mDataFieldSound.setText(String.valueOf("Sound Data\n"+soundBuffer));
         }
     }
@@ -311,12 +324,6 @@ public class ControlActivity extends Activity{
                 if (BluetoothLeService.sound_char_uuid.equals(gatt.getUuid())) {
                     char_cache[0][0]=i;
                     char_cache[0][1]=j;
-                } else if (BluetoothLeService.temp_char_uuid.equals(gatt.getUuid())) {
-                    char_cache[1][0]=i;
-                    char_cache[1][1]=j;
-                } else if (BluetoothLeService.acc_char_uuid.equals(gatt.getUuid())) {
-                    char_cache[2][0]=i;
-                    char_cache[2][1]=j;
                 }
                 j++;
             }

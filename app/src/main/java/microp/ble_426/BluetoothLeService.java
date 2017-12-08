@@ -45,10 +45,7 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "microp.ble-426.EXTRA_DATA";
 
-    public final static UUID service_uuid = UUID.fromString(GattAttributes.SERVICE_UUID);
     public final static UUID sound_char_uuid =  UUID.fromString(GattAttributes.CHARACTERISTIC_UUID);
-    public final static UUID acc_char_uuid =  UUID.fromString(GattAttributes.ACC_CHAR_UUID);
-    public final static UUID temp_char_uuid =  UUID.fromString(GattAttributes.TEMP_CHAR_UUID);
 
     // Implements callback methods for GATT events
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
@@ -106,20 +103,7 @@ public class BluetoothLeService extends Service {
             int data = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0);
             String hex = Integer.toHexString(data);
             intent.putExtra(EXTRA_DATA, String.valueOf("0;"+hex));
-        } else if(temp_char_uuid.equals(characteristic.getUuid())) {
-            float temperatura =(characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_SINT16,0)).floatValue();
-            temperatura /= 10.0f;
-            intent.putExtra(EXTRA_DATA, String.valueOf("1;"+temperatura));
-        } else if (acc_char_uuid.equals(characteristic.getUuid())) {
-            short x,y,z;
-            final byte[] data = characteristic.getValue();
-            if (data.length == 6){
-                x = ByteBuffer.wrap(data, 0, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
-                y = ByteBuffer.wrap(data, 2, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
-                z = ByteBuffer.wrap(data, 4, 2).order(java.nio.ByteOrder.LITTLE_ENDIAN).getShort();
-                intent.putExtra(EXTRA_DATA, "2;"+x+"--"+y+"--"+z);
-            }
-        }else {
+        } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();
             if (data != null && data.length > 0) {
@@ -271,7 +255,7 @@ public class BluetoothLeService extends Service {
         }
         mBluetoothGatt.setCharacteristicNotification(characteristic, enabled);
 
-        if (sound_char_uuid.equals(characteristic.getUuid()) || acc_char_uuid.equals(characteristic.getUuid())) {
+        if (sound_char_uuid.equals(characteristic.getUuid())) {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
                     UUID.fromString(GattAttributes.NOTIFICATION_DESCRIPTOR_UUID));
             descriptor.setValue(enabled ? BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE :
