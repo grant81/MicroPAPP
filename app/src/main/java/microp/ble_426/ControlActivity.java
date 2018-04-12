@@ -30,21 +30,27 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import microp.ble_426.wavIO;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static java.io.File.createTempFile;
 
 public class ControlActivity extends Activity {
     private final static String TAG = ControlActivity.class.getSimpleName();
@@ -54,7 +60,8 @@ public class ControlActivity extends Activity {
 
     private TextView mConnectionState;
     private TextView mDataFieldSound;
-    private Button mButton;
+    private Button mSendButton;
+    private Button mReceiveButton;
     private String mDeviceName;
     private String mDeviceAddress;
     private BluetoothLeService mBluetoothLeService;
@@ -131,7 +138,7 @@ public class ControlActivity extends Activity {
     };
 
     // Upload data to firebase storage
-    private final View.OnClickListener buttonClickListener =
+    private final View.OnClickListener sbuttonClickListener =
             new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -147,7 +154,7 @@ public class ControlActivity extends Activity {
                                 audio[j] = b.byteValue();
                                 j++;
                             }
-                            mDataFieldSound.setText(String.valueOf("sending your lovely voice\n length:"+soundBytes.size()+" bytes long\n"));
+                            mDataFieldSound.setText(String.valueOf("sending your lovely voice\n length:" + soundBytes.size() + " bytes long\n"));
                             Log.d(TAG, "data length-----------" + audio.length);
                             byte[] file = wavIO.wavGet(audio);
                             StorageReference riversRef = mStorageRef.child("Sound/track1.wav");
@@ -178,7 +185,7 @@ public class ControlActivity extends Activity {
                                     rollBuffer += ",";
                                 }
                             }
-                            mDataFieldSound.setText(String.valueOf("sending sweet pitch n roll\n #of pitch: "+pitchBuffer.length()/2+"\n#of roll: "+rollBuffer.length()/2));
+                            mDataFieldSound.setText(String.valueOf("sending sweet pitch n roll\n #of pitch: " + pitchBuffer.length() / 2 + "\n#of roll: " + rollBuffer.length() / 2));
 
                             StorageReference pitchRef = mStorageRef.child("PitchRoll/pitch.txt");
                             StorageReference rollRef = mStorageRef.child("PitchRoll/roll.txt");
@@ -188,6 +195,9 @@ public class ControlActivity extends Activity {
                                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                             Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                             Log.e(TAG, "Url: " + downloadUrl);
+                                            mDataFieldSound.append(String.valueOf("done uploading!!\n"));
+                                            dataCounter = 0;
+                                            soundBytes.clear();
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
@@ -202,6 +212,9 @@ public class ControlActivity extends Activity {
                                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                             Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                             Log.e(TAG, "Url: " + downloadUrl);
+                                            mDataFieldSound.append(String.valueOf("done uploading!!\n"));
+                                            dataCounter = 0;
+                                            soundBytes.clear();
                                         }
                                     })
                                     .addOnFailureListener(new OnFailureListener() {
@@ -212,11 +225,54 @@ public class ControlActivity extends Activity {
                                     });
 
                         }
-                        mDataFieldSound.append(String.valueOf("done uploading!!\n"));
-                        dataCounter = 0;
-                        soundBytes.clear();
+
                     }
                 }
+            };
+    // download data to firebase storage
+
+    File localFile = null;
+    private final View.OnClickListener rbuttonClickListener =
+            new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    StorageReference receiveRef = mStorageRef.child("Sound/result.txt");
+
+
+                    int result = -1;
+                    try {
+                        localFile = createTempFile("result", "txt");
+                        receiveRef.getFile(localFile).addOnSuccessListener(new OnSuccessListener<FileDownloadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(FileDownloadTask.TaskSnapshot taskSnapshot) {
+                                StringBuilder text = new StringBuilder();
+                                BufferedReader br = null;
+                                try {
+                                    br = new BufferedReader(new FileReader(localFile));
+                                    String line;
+                                    while ((line = br.readLine()) != null) {
+                                        text.append(line);
+                                        text.append('\n');
+                                    }
+                                    mDataFieldSound.setText("You just said :"+text.toString());
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle any errors
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+
+                }
+
             };
 
     private void clearUI() {
@@ -241,9 +297,10 @@ public class ControlActivity extends Activity {
         mDataFieldSound = (TextView) findViewById(R.id.data_value_sound);
         mDataFieldSound.setMovementMethod(new ScrollingMovementMethod());
         soundBuffer = "";
-        mButton = (Button) findViewById(R.id.send_button);
-        mButton.setOnClickListener(buttonClickListener);
-
+        mSendButton = (Button) findViewById(R.id.send_button);
+        mSendButton.setOnClickListener(sbuttonClickListener);
+        mReceiveButton = (Button) findViewById(R.id.receive_button);
+        mReceiveButton.setOnClickListener(rbuttonClickListener);
         getActionBar().setTitle(mDeviceName);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
@@ -330,7 +387,6 @@ public class ControlActivity extends Activity {
     }
 
 
-
     private void displaySoundData(String data) {
 
         if (data != null) {
@@ -339,7 +395,7 @@ public class ControlActivity extends Activity {
             Log.d(TAG, "data Counter: " + dataCounter);
             // soundBuffer += data;
             soundBytes.add(hexStringToByteArraySingle(data));
-            mDataFieldSound.setText(String.valueOf("hold on receiving data\n current data: "+data));
+            mDataFieldSound.setText(String.valueOf("hold on receiving data\n current data: " + data));
 
         }
 
