@@ -47,7 +47,7 @@
             android:layout_height="wrap_content"/>
         <TextView android:id="@+id/data_value_sound"
             android:layout_width="match_parent"
-            android:layout_height="310dp"
+            android:layout_height="260dp"
             android:text="@string/no_data"
             android:textSize="18sp"
             android:maxLines="2000"
@@ -60,5 +60,12 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:text="@string/button_send" />
+
+    <Button
+        android:id="@+id/downLoad_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="10dp"
+        android:text="RECEIVE" />
 
 </LinearLayout>
