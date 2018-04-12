@@ -49,6 +49,7 @@ public class BluetoothLeService extends Service {
 
     // Implements callback methods for GATT events
     private final BluetoothGattCallback mGattCallback = new BluetoothGattCallback() {
+
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
             String intentAction;
@@ -87,6 +88,8 @@ public class BluetoothLeService extends Service {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
+            Log.d(TAG,"characteristic Changed "+characteristic);
+
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
     };
@@ -101,7 +104,14 @@ public class BluetoothLeService extends Service {
 
         if (sound_char_uuid.equals(characteristic.getUuid())) {
             int data = characteristic.getIntValue(BluetoothGattCharacteristic.FORMAT_UINT8,0);
-            String hex = Integer.toHexString(data);
+            Log.d(TAG,"data received "+data);
+            StringBuilder sb = new StringBuilder();
+            sb.append(Integer.toHexString(data));
+            if (sb.length() < 2) {
+                sb.insert(0, '0'); // pad with leading zero if needed
+            }
+            String hex = sb.toString();
+
             intent.putExtra(EXTRA_DATA, String.valueOf("0;"+hex));
         } else {
             // For all other profiles, writes the data formatted in HEX.
@@ -115,7 +125,6 @@ public class BluetoothLeService extends Service {
         }
         sendBroadcast(intent);
     }
-
     public class LocalBinder extends Binder {
         BluetoothLeService getService() {
             return BluetoothLeService.this;

@@ -6,6 +6,7 @@ import java.util.HashMap;
 public class GattAttributes {
     public static String SERVICE_UUID = "99366e80-cf3a-11e1-9a38-0002a5d5c51b";
     public static String CHARACTERISTIC_UUID = "98366e80-cf3a-11e1-9b39-0002a5d5c51b";
+//    public static String CHARACTERISTIC_UUID = "98366e80cf3a11e19b390002a5d5c51b";
     public static String ACC_CHAR_UUID = "340a1b80-cf4b-11e1-ac36-0002a5d5c51b";
     public static String FREEFALL_CHAR_UUID = "e23e78a0-cf4a-11e1-8ffc-0002a5d5c51b";
     public static String TEMP_CHAR_UUID = "a32e5520-e477-11e2-a9e3-0002a5d5c51b";

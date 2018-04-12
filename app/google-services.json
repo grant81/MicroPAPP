@@ -1,43 +1,35 @@
 {
   "project_info": {
-    "project_number": "91823405629",
-    "firebase_url": "https://ble426-8d188.firebaseio.com",
-    "project_id": "ble426-8d188",
-    "storage_bucket": "ble426-8d188.appspot.com"
+    "project_number": "912918123151",
+    "firebase_url": "https://microp-d55c0.firebaseio.com",
+    "project_id": "microp-d55c0",
+    "storage_bucket": "microp-d55c0.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:91823405629:android:ed00983c5a409fa5",
+        "mobilesdk_app_id": "1:912918123151:android:5fc38ec607f13000",
         "android_client_info": {
-          "package_name": "microp.ble_426"
+          "package_name": "com.example.grant.micropfinal"
         }
       },
       "oauth_client": [
         {
-          "client_id": "91823405629-ff202fhnmggmc2tuf1v1rmvpf8thvkuc.apps.googleusercontent.com",
+          "client_id": "912918123151-604jkm9g99f98dfl3mocf5t9ka4mo2qc.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "microp.ble_426",
-            "certificate_hash": "59f41f3a7662d416e7062942f736d3d3548c8b5a"
+            "package_name": "com.example.grant.micropfinal",
+            "certificate_hash": "e193a2d5505f6fdea97048cd4a8e50240b4ea08a"
           }
         },
         {
-          "client_id": "91823405629-mbqeg9s43tg9c1iarvbkkff90djivu3s.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "microp.ble_426",
-            "certificate_hash": "88cde8a06277224b0e01652f9096ac8bd7d56941"
-          }
-        },
-        {
-          "client_id": "91823405629-uetrithkpru5h9vhhmmfc5fj7bc77arq.apps.googleusercontent.com",
+          "client_id": "912918123151-d8mh0po0vhi8lsutbbpgeojcnvmf3roh.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBEIkiHC4RzohefzAuzjDXhhJ79YiYmpYU"
+          "current_key": "AIzaSyAAgERkHaRw7WUuZ007cBumczAgNJJ3sVE"
         }
       ],
       "services": {
@@ -48,10 +40,41 @@
           "status": 2,
           "other_platform_oauth_client": [
             {
-              "client_id": "91823405629-uetrithkpru5h9vhhmmfc5fj7bc77arq.apps.googleusercontent.com",
+              "client_id": "912918123151-d8mh0po0vhi8lsutbbpgeojcnvmf3roh.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:912918123151:android:ed00983c5a409fa5",
+        "android_client_info": {
+          "package_name": "microp.ble_426"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "912918123151-d8mh0po0vhi8lsutbbpgeojcnvmf3roh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAAgERkHaRw7WUuZ007cBumczAgNJJ3sVE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
         },
         "ads_service": {
           "status": 2
